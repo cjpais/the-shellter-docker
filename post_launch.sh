@@ -25,15 +25,19 @@ HOME_DIR="/home/$USERNAME"
 ZSHRC="/$HOME_DIR/.zshrc"
 
 # Add new user and make default shell ZSH
-useradd -ms /bin/zsh $USERNAME
+useradd -m -p $USERNAME -s /bin/zsh $USERNAME
 usermod -aG sudo $USERNAME
-echo "$USERNAME" | passwd --stdin $USERNAME
-echo -e "$USERNAME\n$USERNAME" | passwd $USERNAME
+echo "$USERNAME:$USERNAME"|chpasswd
 
+# Make basic .zshrc
 touch $ZSHRC
 echo 'if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then' >> $ZSHRC
 echo '  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"' >> $ZSHRC
 echo 'fi' >> $ZSHRC
+
+echo "autoload -Uz promptinit compinit" >> $ZSHRC
+echo "" >> $ZSHRC
+echo "PROMPT='%F{green}%n %F{blue}%B%~%b%f > '" >> $ZSHRC
 
 echo "alias language='asdf'" >> /home/$1/.zshrc
 echo "alias search='so'" >> /home/$1/.zshrc
@@ -43,13 +47,16 @@ echo "" >> /home/$1/.zshrc
 echo '[[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh' >> /home/$1/.zshrc
 echo "" >> /home/$1/.zshrc
 echo ". /home/$1/.asdf/asdf.sh" >> /home/$1/.zshrc
-echo ". $HOME_DIR/.config/zsh-z.plugin.zsh" >> $ZSHRC
+echo ". $HOME_DIR/.zsh/zsh-z.plugin.zsh" >> $ZSHRC
 
 echo "" >> /home/$1/.zshrc
 
-echo "# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh." >> /home/$1/.zshrc
-echo ". /home/$1/.config/powerlevel10k/powerlevel10k.zsh-theme" >> /home/$1/.zshrc
-echo "[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> $ZSHRC
+#echo ". /home/$1/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" >> /home/$1/.zshrc
+
+# P10K CONFIG
+#echo "# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh." >> /home/$1/.zshrc
+#echo ". /home/$1/.zsh/powerlevel10k/powerlevel10k.zsh-theme" >> /home/$1/.zshrc
+#echo "[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh" >> $ZSHRC
 
 chown $USERNAME:$USERNAME /home/$USERNAME/.zshrc
 cp /tmp/.p10k.zsh $HOME_DIR
@@ -57,11 +64,13 @@ chown $USERNAME:$USERNAME $HOME_DIR/.p10k.zsh
 
 # Switch to the new user
 sudo -u $1 -H zsh -c "cd /home/$1; curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | zsh"
-sudo -u $1 -H zsh -c "cd /home/$1; git clone --depth=1 https://github.com/romkatv/powerlevel10k.git .config/powerlevel10k"
+#sudo -u $1 -H zsh -c "cd /home/$1; git clone --depth=1 https://github.com/romkatv/powerlevel10k.git .zsh/powerlevel10k"
 sudo -u $1 -H zsh -c "cd /home/$1; git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.0-rc1"
 sudo -u $1 -H zsh -c "cd /home/$1; curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 sudo -u $1 -H zsh -c "cd /home/$1; git clone https://github.com/garabik/grc.git; sh grc/install.sh; rm -rf grc"
-sudo -u $1 -H zsh -c "cd /home/$1; wget -P .config/ https://raw.githubusercontent.com/agkozak/zsh-z/master/zsh-z.plugin.zsh"
+sudo -u $1 -H zsh -c "cd /home/$1; wget -P .zsh/ https://raw.githubusercontent.com/agkozak/zsh-z/master/zsh-z.plugin.zsh"
+sudo -u $1 -H zsh -c "cd /home/$1; git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions"
+sudo -u $1 -H zsh -c "cd /home/$1; git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting"
 sudo -u $1 -H zsh -c "cd /home/$1; git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf; cd .fzf; ./install --all"
 
 su - $USERNAME
